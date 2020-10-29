@@ -12,7 +12,7 @@
          <font>
             <Font name="Corbel" size="20.0" />
          </font></Label>
-      <Button fx:id="StartButton" mnemonicParsing="false" onAction="#start" text="Start" GridPane.rowIndex="1" />
+      <Button fx:id="StartButton" mnemonicParsing="false" onAction="#Start" text="Start" GridPane.rowIndex="1" />
       <SplitPane fx:id="splitPane" dividerPositions="0.5" prefHeight="461.0" prefWidth="816.0" GridPane.rowIndex="2">
         <items>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="409.0" prefWidth="374.0">
@@ -152,8 +152,8 @@
                          </Label>
                      </children>
                   </GridPane>
-                  <Button fx:id="RotateButton" layoutX="20.0" layoutY="360.0" mnemonicParsing="false" onAction="#rotateShip" prefHeight="23.0" prefWidth="51.0" text="Rotate" />
-                  <Button fx:id="Carrier" contentDisplay="RIGHT" layoutX="20.0" layoutY="393.0" mnemonicParsing="false" onAction="#chooseShip" prefHeight="38.0" prefWidth="63.0">
+                  <Button fx:id="RotateButton" layoutX="20.0" layoutY="360.0" mnemonicParsing="false" onAction="#RotateShip" prefHeight="23.0" prefWidth="51.0" text="Rotate" />
+                  <Button fx:id="Carrier" contentDisplay="RIGHT" layoutX="20.0" layoutY="393.0" mnemonicParsing="false" onAction="#ChooseShip" prefHeight="38.0" prefWidth="63.0">
                      <graphic>
                         <ImageView fitHeight="46.0" fitWidth="46.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -165,7 +165,7 @@
                         <Tooltip text="Carrier is 5 boxes long" />
                      </tooltip></Button>
                   <Label alignment="CENTER" layoutX="24.0" layoutY="427.0" prefHeight="17.0" prefWidth="57.0" text="Carrier" />
-                  <Button fx:id="Battleship" layoutX="91.0" layoutY="393.0" mnemonicParsing="false" onAction="#chooseShip" prefHeight="54.0" prefWidth="62.0">
+                  <Button fx:id="Battleship" layoutX="91.0" layoutY="393.0" mnemonicParsing="false" onAction="#ChooseShip" prefHeight="54.0" prefWidth="62.0">
                      <graphic>
                         <ImageView fitHeight="54.0" fitWidth="46.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -178,7 +178,7 @@
                      </tooltip>
                   </Button>
                   <Label layoutX="96.0" layoutY="427.0" prefHeight="17.0" prefWidth="57.0" text="Battleship" />
-                  <Button fx:id="Destroyer" layoutX="159.0" layoutY="393.0" mnemonicParsing="false" onAction="#chooseShip" prefHeight="54.0" prefWidth="63.0">
+                  <Button fx:id="Destroyer" layoutX="159.0" layoutY="393.0" mnemonicParsing="false" onAction="#ChooseShip" prefHeight="54.0" prefWidth="63.0">
                      <graphic>
                         <ImageView fitHeight="45.0" fitWidth="46.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -190,7 +190,7 @@
                         <Tooltip text="Destroyer is 3 boxes long" />
                      </tooltip></Button>
                   <Label alignment="CENTER" ellipsisString="" layoutX="159.0" layoutY="427.0" prefHeight="17.0" prefWidth="62.0" text="Destroyer" />
-                  <Button fx:id="Submarine" layoutX="230.0" layoutY="393.0" mnemonicParsing="false" onAction="#chooseShip" prefHeight="54.0" prefWidth="63.0">
+                  <Button fx:id="Submarine" layoutX="230.0" layoutY="393.0" mnemonicParsing="false" onAction="#ChooseShip" prefHeight="54.0" prefWidth="63.0">
                      <graphic>
                         <ImageView fitHeight="44.0" fitWidth="67.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -202,7 +202,7 @@
                         <Tooltip text="Submarine is 3 boxes long" />
                      </tooltip></Button>
                   <Label layoutX="232.0" layoutY="427.0" prefHeight="17.0" prefWidth="69.0" text="Submarine" />
-                  <Button fx:id="Patrol" layoutX="301.0" layoutY="393.0" mnemonicParsing="false" onAction="#chooseShip" prefHeight="54.0" prefWidth="63.0">
+                  <Button fx:id="Patrol" layoutX="301.0" layoutY="393.0" mnemonicParsing="false" onAction="#ChooseShip" prefHeight="54.0" prefWidth="63.0">
                      <graphic>
                         <ImageView fitHeight="48.0" fitWidth="48.0" pickOnBounds="true" preserveRatio="true">
                            <image>
@@ -215,7 +215,7 @@
                      </tooltip>
                   </Button>
                   <Label layoutX="303.0" layoutY="427.0" prefHeight="17.0" prefWidth="62.0" text="Patrol boat" />
-                  <Button fx:id="StartGame" layoutX="165.0" layoutY="360.0" mnemonicParsing="false" onAction="#startGame" text="Start game" />
+                  <Button fx:id="StartGame" layoutX="165.0" layoutY="360.0" mnemonicParsing="false" onAction="#StartGame" text="Start game" />
                </children></AnchorPane>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="313.0" prefWidth="314.0">
                <children>

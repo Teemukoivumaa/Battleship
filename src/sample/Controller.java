@@ -10,6 +10,7 @@ import javafx.scene.layout.Pane;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Controller {
     // Ship placing buttons and ship rotation
@@ -36,47 +37,80 @@ public class Controller {
     public Button StartGame;
 
     public boolean rotated = false;
+    public boolean enemySets = false;
     public boolean GAME = true;
     public boolean yourTurn = true;
 
-    public List < String > ships = new ArrayList < > ();
-    public List < String > shipLocations = new ArrayList < > ();
+    public List <String> ships = new ArrayList<>();
+    public List <String> shipLocations = new ArrayList<>();
+    public List <String> enemyLocations = new ArrayList<>();
     public String chosenShip = "";
     public String lastPlacedShip = "";
 
     public int shipRow, shipColumn;
     public int shipLength;
     public int rotationRow, rotationColumn;
-    public int turns;
+    public int turns = 0;
 
-    public void start(ActionEvent actionEvent) {
-        setButtons(OwnGrid, "Own");
+    public void Start(ActionEvent actionEvent) {
+        SetButtons(OwnGrid, "Own");
         StartButton.setVisible(false);
         splitPane.setDisable(false);
         stateLabel.setText("Place ships to your board now");
     }
 
-    public void startGame(ActionEvent actionEvent) {
-        setButtons(EnemyGrid, "Enemy");
+    public void StartGame(ActionEvent actionEvent) {
+        SetButtons(EnemyGrid, "Enemy");
         OwnGrid.setDisable(true);
         StartGame.setVisible(false);
         RotateButton.setVisible(false);
         TurnCounter.setVisible(true);
+        TurnCounter.setText("Turns: " + turns);
 
+        enemySets = true;
+        PlaceEnemyShips();
         stateLabel.setText("It's your turn! Click on enemy grid to shoot there");
     }
 
-    public void turns(ActionEvent actionEvent) {
+    public void Turns(ActionEvent actionEvent) {
 
     }
 
-    public void setButtons(GridPane grid, String gridName) {
-        EventHandler<ActionEvent> action = null;
-        if (gridName.equals("Own")) {
-            action = this::setShip;
-        } else {
-            action = this::test;
+    public void PlaceEnemyShips() {
+
+        for (int i = 0; i < 5; i++) {
+            int columnNum = ThreadLocalRandom.current().nextInt(1, 10 + 1);
+            int rowNum = ThreadLocalRandom.current().nextInt(1, 10 + 1);
+            System.out.println("Col"+columnNum+" Row"+rowNum);
+
+            String ship = switch (i) {
+                case 0 -> "Carrier";
+                case 1 -> "Battleship";
+                case 2 -> "Destroyer";
+                case 3 -> "Submarine";
+                case 4 -> "Patrol";
+                default -> throw new IllegalStateException("Unexpected value: " + i);
+            };
+
+            switch (ship) {
+                case "Carrier" -> shipLength = 5;
+                case "Battleship" -> shipLength = 4;
+                case "Destroyer", "Submarine" -> shipLength = 3;
+                case "Patrol" -> shipLength = 2;
+            }
+
+            EventHandler<ActionEvent> action = null;
+            //SetShip();
+
         }
+    }
+
+    public void SetButtons(GridPane grid, String gridName) {
+        EventHandler<ActionEvent> action = null;
+
+        if (gridName.equals("Own")) { action = this::SetShip; }
+        else { action = this::test; }
+
         System.out.println(gridName);
         for (int i = 1; i < 11; i++) {
             String columnChar = IntToChar(i);
@@ -98,7 +132,7 @@ public class Controller {
         System.out.println("Shot at: " + mark);
     }
 
-    public void chooseShip(ActionEvent actionEvent) {
+    public void ChooseShip(ActionEvent actionEvent) {
         String temp = (actionEvent.toString());
         String ship = temp.substring(42, temp.length() - 23);
         System.out.println("Chosen ship: " + ship);
@@ -127,8 +161,19 @@ public class Controller {
         rotated = false;
     }
 
-    public void setShip(ActionEvent actionEvent) {
+    public void SetShip(ActionEvent actionEvent) {
+        System.out.println(actionEvent);
         if (!chosenShip.equals("")) {
+            GridPane grid;
+
+            if (enemySets) {
+                grid = EnemyGrid;
+                System.out.println("Enemy places boat");
+            } else {
+                grid = OwnGrid;
+                System.out.println("You place a boat");
+            }
+
             String temp = actionEvent.toString();
             String location = temp.substring(42, temp.length() - 23);
             System.out.println(location);
@@ -151,7 +196,7 @@ public class Controller {
                 for (int i = 0; i < shipLength; i++) {
                     Pane shipLocation = new Pane();
                     shipLocation.setStyle("-fx-background-color: black;");
-                    OwnGrid.add(shipLocation, shipColumn + i, shipRow);
+                    grid.add(shipLocation, shipColumn + i, shipRow);
 
                     columnChar = IntToChar(shipColumn + i);
                     shipLocations.add(columnChar + shipRow);
@@ -167,7 +212,7 @@ public class Controller {
         }
     }
 
-    public void rotateShip(ActionEvent actionEvent) {
+    public void RotateShip(ActionEvent actionEvent) {
         if (rotated) {
             String columnChar = IntToChar(shipColumn);
             boolean collision = DoesItCollide(columnChar, shipRow, shipLength, false, shipLocations);
