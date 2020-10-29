@@ -1,6 +1,7 @@
 package sample;
 
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
@@ -11,14 +12,32 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Controller {
-    public GridPane ownGrid;
-    public Label stateLabel;
-    public SplitPane splitPane;
-    public Button startButton;
+    // Ship placing buttons and ship rotation
+    public Button Carrier;
+    public Button Battleship;
+    public Button Destroyer;
+    public Button Submarine;
+    public Button Patrol;
     public Button RotateButton;
+
+    // Play area
+    public SplitPane splitPane;
+    public GridPane OwnGrid;
+    public GridPane EnemyGrid;
+
+    // Creates buttons at start()
+    public Button StartButton;
+
+    // Tells the state of the game and turns
+    public Label stateLabel;
+    public Label TurnCounter;
+
+    // Start the game
     public Button StartGame;
 
     public boolean rotated = false;
+    public boolean GAME = true;
+    public boolean yourTurn = true;
 
     public List < String > ships = new ArrayList < > ();
     public List < String > shipLocations = new ArrayList < > ();
@@ -28,22 +47,44 @@ public class Controller {
     public int shipRow, shipColumn;
     public int shipLength;
     public int rotationRow, rotationColumn;
+    public int turns;
 
     public void start(ActionEvent actionEvent) {
-        setButtons(ownGrid);
-        startButton.setVisible(false);
+        setButtons(OwnGrid, "Own");
+        StartButton.setVisible(false);
         splitPane.setDisable(false);
         stateLabel.setText("Place ships to your board now");
     }
 
-    public void setButtons(GridPane grid) {
+    public void startGame(ActionEvent actionEvent) {
+        setButtons(EnemyGrid, "Enemy");
+        OwnGrid.setDisable(true);
+        StartGame.setVisible(false);
+        RotateButton.setVisible(false);
+        TurnCounter.setVisible(true);
+
+        stateLabel.setText("It's your turn! Click on enemy grid to shoot there");
+    }
+
+    public void turns(ActionEvent actionEvent) {
+
+    }
+
+    public void setButtons(GridPane grid, String gridName) {
+        EventHandler<ActionEvent> action = null;
+        if (gridName.equals("Own")) {
+            action = this::setShip;
+        } else {
+            action = this::test;
+        }
+        System.out.println(gridName);
         for (int i = 1; i < 11; i++) {
             String columnChar = IntToChar(i);
 
             for (int j = 1; j < 11; j++) {
                 Button setButton = new Button();
                 setButton.setStyle("-fx-background-color: f4f4f4;");
-                setButton.setOnAction(this::setShip);
+                setButton.setOnAction(action);
                 setButton.setPrefWidth(26);
                 setButton.setId(columnChar + j);
                 grid.add(setButton, i, j);
@@ -103,14 +144,14 @@ public class Controller {
             shipRow = Integer.parseInt(location.substring(1));
             shipColumn = CharToInt(columnChar);
 
-            boolean collision = FirstSet(columnChar, shipRow, shipLength, rotated, shipLocations);
+            boolean collision = FirstSet(columnChar, shipRow, shipLength, shipLocations);
             if (!collision) {
                 ships.add(chosenShip); // add ship to list
 
                 for (int i = 0; i < shipLength; i++) {
                     Pane shipLocation = new Pane();
                     shipLocation.setStyle("-fx-background-color: black;");
-                    ownGrid.add(shipLocation, shipColumn + i, shipRow);
+                    OwnGrid.add(shipLocation, shipColumn + i, shipRow);
 
                     columnChar = IntToChar(shipColumn + i);
                     shipLocations.add(columnChar + shipRow);
@@ -134,7 +175,7 @@ public class Controller {
                 for (int i = 0; i < shipLength; i++) {
                     Pane emptyPane = new Pane();
                     emptyPane.setStyle("-fx-background-color: f4f4f4; -fx-border-color: black;");
-                    ownGrid.add(emptyPane, shipColumn, shipRow + i);
+                    OwnGrid.add(emptyPane, shipColumn, shipRow + i);
                     shipLocations.remove(shipLocations.size() - 1);
                 }
                 System.out.println(shipLocations);
@@ -146,7 +187,7 @@ public class Controller {
                     Pane shipPane = new Pane();
                     shipPane.setStyle("-fx-background-color: black;");
 
-                    ownGrid.add(shipPane, rotationColumn, shipRow);
+                    OwnGrid.add(shipPane, rotationColumn, shipRow);
                     shipLocations.add(columnChar + shipRow);
                     rotationColumn++;
                 }
@@ -163,7 +204,7 @@ public class Controller {
                 for (int i = 0; i < shipLength; i++) {
                     Pane emptyPane = new Pane();
                     emptyPane.setStyle("-fx-background-color: f4f4f4; -fx-border-color: black;");
-                    ownGrid.add(emptyPane, shipColumn + i, shipRow);
+                    OwnGrid.add(emptyPane, shipColumn + i, shipRow);
                     shipLocations.remove(shipLocations.size() - 1);
                 }
                 System.out.println(shipLocations);
@@ -173,7 +214,7 @@ public class Controller {
                     Pane shipPane = new Pane();
                     shipPane.setStyle("-fx-background-color: black;");
 
-                    ownGrid.add(shipPane, shipColumn, rotationRow);
+                    OwnGrid.add(shipPane, shipColumn, rotationRow);
                     shipLocations.add(columnChar + rotationRow);
                     rotationRow++;
                 }
@@ -186,15 +227,10 @@ public class Controller {
         }
     }
 
-    @SuppressWarnings("EmptyMethod")
-    public void startGame(ActionEvent actionEvent) {
-
-    }
-
     public boolean DoesItCollide(String columnChar, int rowInt, int length, boolean rotation, List < String > shipLocations) {
         boolean collision = false;
 
-        if (!rotation) { // default position >
+        if (!rotation) { // set to default position >
             int columnInt = CharToInt(columnChar);
             columnInt++;
             for (int j = 0; j < length; j++) { // check if hits other ships
@@ -211,26 +247,11 @@ public class Controller {
         } else {
             if (rowInt == 7 || rowInt == 8 || rowInt == 9 || rowInt == 10) {
                 switch (rowInt) {
-                    case 7:
-                        if (length > 4) {
-                            collision = true;
-                        }
-                        break;
-                    case 8:
-                        if (length > 3) {
-                            collision = true;
-                        }
-                        break;
-                    case 9:
-                        if (length > 2) {
-                            collision = true;
-                        }
-                        break;
-                    case 10:
-                        collision = true;
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + columnChar);
+                    case 7: if (length > 4) { collision = true; } break;
+                    case 8: if (length > 3) { collision = true; } break;
+                    case 9: if (length > 2) { collision = true; } break;
+                    case 10: collision = true; break;
+                    default: throw new IllegalStateException("Unexpected value: " + columnChar);
                 }
             }
 
@@ -254,22 +275,17 @@ public class Controller {
         return collision;
     }
 
-    public boolean FirstSet(String columnChar, int rowInt, int length, boolean rotation, List < String > shipLocations) {
+    public boolean FirstSet(String columnChar, int rowInt, int length, List < String > shipLocations) {
         boolean collision = false;
 
-        if (!rotation) { // default position >
+
             if (columnChar.equals("G") || columnChar.equals("H") || columnChar.equals("I") || columnChar.equals("J")) {
                 switch (columnChar) {
-                    case "G":
-                        if (length > 4) { collision = true; } break;
-                    case "H":
-                        if (length > 3) { collision = true; } break;
-                    case "I":
-                        if (length > 2) { collision = true; } break;
-                    case "J":
-                        collision = true; break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + columnChar);
+                    case "G": if (length > 4) { collision = true; } break;
+                    case "H": if (length > 3) { collision = true; } break;
+                    case "I": if (length > 2) { collision = true; } break;
+                    case "J": collision = true; break;
+                    default: throw new IllegalStateException("Unexpected value: " + columnChar);
                 }
             }
 
@@ -287,7 +303,7 @@ public class Controller {
                     }
                 }
             }
-        }
+
 
         System.out.println(collision);
         return collision;
