@@ -157,7 +157,7 @@
                      <graphic>
                         <ImageView fitHeight="46.0" fitWidth="46.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@pictures/carrierTop.png" />
+                              <Image url="@images/carrierTop.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -169,7 +169,7 @@
                      <graphic>
                         <ImageView fitHeight="54.0" fitWidth="46.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@pictures/battleshipTop.png" />
+                              <Image url="@images/battleshipTop.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -182,7 +182,7 @@
                      <graphic>
                         <ImageView fitHeight="45.0" fitWidth="46.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@pictures/destroyerTop.png" />
+                              <Image url="@images/destroyerTop.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -194,7 +194,7 @@
                      <graphic>
                         <ImageView fitHeight="44.0" fitWidth="67.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@pictures/submarineTop.png" />
+                              <Image url="@images/submarineTop.png" />
                            </image>
                         </ImageView>
                      </graphic>
@@ -206,7 +206,7 @@
                      <graphic>
                         <ImageView fitHeight="48.0" fitWidth="48.0" pickOnBounds="true" preserveRatio="true">
                            <image>
-                              <Image url="@pictures/patrolboatTop.png" />
+                              <Image url="@images/patrolboatTop.png" />
                            </image>
                         </ImageView>
                      </graphic>
