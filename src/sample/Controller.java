@@ -10,9 +10,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class Controller {
     // Ship placing buttons and ship rotation
@@ -38,9 +40,9 @@ public class Controller {
     // Start the game
     public Button StartGame;
 
+    public Button enemyShoot;
     public boolean rotated = false;
     public boolean enemySets = false;
-    public boolean GAME = true;
     public boolean yourTurn = true;
 
     // Game ships
@@ -60,6 +62,7 @@ public class Controller {
     public List <String> shipLocations = new ArrayList<>();
     public List <String> enemyShips = new ArrayList<>();
     public List <String> enemyLocations = new ArrayList<>();
+    public List <String> enemyShotLocations = new ArrayList<>();
     public String chosenShip = "";
     public String lastPlacedShip = "";
 
@@ -75,7 +78,7 @@ public class Controller {
         stateLabel.setText("Place ships to your board now");
     }
 
-    public void StartGame(ActionEvent actionEvent) {
+    public void StartGame(ActionEvent actionEvent) throws InterruptedException {
         SetButtons(EnemyGrid, "Enemy");
         OwnGrid.setDisable(true);
         StartGame.setVisible(false);
@@ -88,11 +91,7 @@ public class Controller {
         stateLabel.setText("It's your turn! Click on enemy grid to shoot there");
     }
 
-    public void Turns(ActionEvent actionEvent) {
-
-    }
-
-    public void ShootAtEnemy(ActionEvent actionEvent) {
+    public void ShootAtEnemy(ActionEvent actionEvent) throws InterruptedException {
         String temp = actionEvent.toString();
         String mark = temp.substring(42, temp.length() - 23);
         stateLabel.setText("Shot at: " + mark);
@@ -100,14 +99,52 @@ public class Controller {
         turns++;
         TurnCounter.setText("Turns: " + turns);
         DidItHit(mark);
-        //yourTurn = false;
+        yourTurn = false;
+
+        enemyShoot.fire();
+    }
+
+    public void EnemyShoots() throws InterruptedException {
+        boolean choosing = true;
+        String location = null;
+        int randomSleep = ThreadLocalRandom.current().nextInt(100, 1000 + 1);
+
+        Thread.sleep(randomSleep);
+
+        while (choosing) {
+            boolean nonShot = true;
+            int columnNum = ThreadLocalRandom.current().nextInt(1, 10 + 1);
+            int rowNum = ThreadLocalRandom.current().nextInt(1, 10 + 1);
+            location = IntToChar(columnNum) + rowNum;
+
+            for (String enemyShotLocation : enemyShotLocations) {
+                if (location.equals(enemyShotLocation)) {
+                    nonShot = false;
+                    break;
+                }
+            }
+
+            if (nonShot) choosing = false;
+        }
+        enemyShotLocations.add(location);
+        DidItHit(location);
+
+        turns++;
+        TurnCounter.setText("Turns: " + turns);
+        yourTurn = true;
     }
 
     public void SetButtons(GridPane grid, String gridName) {
         EventHandler<ActionEvent> action = null;
 
         if (gridName.equals("Own")) { action = this::SetShip; }
-        else { action = this::ShootAtEnemy; }
+        else { action = actionEvent -> {
+            try {
+                ShootAtEnemy(actionEvent);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }; }
 
         for (int i = 1; i < 11; i++) {
             String columnChar = IntToChar(i);
@@ -124,18 +161,17 @@ public class Controller {
     }
 
     // Enemy ship placement ---------------------------------------------
-    public void PlaceEnemyShips() {
+    public void PlaceEnemyShips() throws InterruptedException {
         for (int i = 0; i < 5; i++) {
             int columnNum = ThreadLocalRandom.current().nextInt(1, 10 + 1);
             int rowNum = ThreadLocalRandom.current().nextInt(1, 10 + 1);
 
-            chosenShip = switch (i) {
-                case 0 -> "Carrier";
-                case 1 -> "Battleship";
-                case 2 -> "Destroyer";
-                case 3 -> "Submarine";
-                case 4 -> "Patrol";
-                default -> throw new IllegalStateException("Unexpected value: " + i);
+            switch (i) {
+                case 0 -> chosenShip = "Carrier";
+                case 1 -> chosenShip = "Battleship";
+                case 2 -> chosenShip = "Destroyer";
+                case 3 -> chosenShip = "Submarine";
+                case 4 -> chosenShip = "Patrol";
             };
 
             switch (chosenShip) {
@@ -150,8 +186,8 @@ public class Controller {
             shipRow = Integer.parseInt(location.substring(1));
 
             boolean collision = FirstSet(IntToChar(columnNum), shipRow, shipLength, enemyLocations);
-            if (collision) { i--; }
-            else { SetEnemyShip(location); }
+            if (collision) { i--; Thread.sleep(100); }
+            else { Thread.sleep(100); SetEnemyShip(location); }
         }
     }
 
@@ -170,7 +206,13 @@ public class Controller {
             if (!collision) {
                 enemyShips.add(chosenShip); // add ship to list
                 List <String> locations = new ArrayList<>();
-                EventHandler<ActionEvent> action = this::ShootAtEnemy;
+                EventHandler<ActionEvent> action = actionEvent -> {
+                    try {
+                        ShootAtEnemy(actionEvent);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                };
 
                 for (int i = 0; i < shipLength; i++) {
                     columnChar = IntToChar(shipColumn + i);
@@ -367,7 +409,9 @@ public class Controller {
         int rowNum = Integer.parseInt(mark.substring(1));
 
         boolean itHit = false;
-        List<String> locations = enemyLocations;
+        List<String> locations = shipLocations;
+
+        if (yourTurn) locations = enemyLocations;
 
         for (int i = 0; i < 5; i++) {
             if (yourTurn) {
@@ -378,12 +422,20 @@ public class Controller {
                     case 3 -> locations = enemySubmarine.GetShipLocation();
                     case 4 -> locations = enemyPatrol.GetShipLocation();
                 }
+            } else {
+                switch (i) {
+                    case 0 -> locations = carrier.GetShipLocation();
+                    case 1 -> locations = battleship.GetShipLocation();
+                    case 2 -> locations = destroyer.GetShipLocation();
+                    case 3 -> locations = submarine.GetShipLocation();
+                    case 4 -> locations = patrol.GetShipLocation();
+                }
             }
 
             for (int j = 0; j < locations.size(); j++) {
                 if (mark.equals(locations.get(j))) {
+                    boolean destroyed = false;
                     if (yourTurn) {
-                        boolean destroyed = false;
                         switch (i) { // update ship locations
                             case 0 -> destroyed = enemyCarrier.SetHits(mark);
                             case 1 -> destroyed = enemyBattleship.SetHits(mark);
@@ -391,6 +443,18 @@ public class Controller {
                             case 3 -> destroyed = enemySubmarine.SetHits(mark);
                             case 4 -> destroyed = enemyPatrol.SetHits(mark);
                         }
+                        stateLabel.setText("Enemy ship has been hit at: " + mark);
+                        if (destroyed) stateLabel.setText("Enemy ship has been destroyed!");
+                    } else {
+                        switch (i) {
+                            case 0 -> destroyed = carrier.SetHits(mark);
+                            case 1 -> destroyed = battleship.SetHits(mark);
+                            case 2 -> destroyed = destroyer.SetHits(mark);
+                            case 3 -> destroyed = submarine.SetHits(mark);
+                            case 4 -> destroyed = patrol.SetHits(mark);
+                        }
+                        stateLabel.setText("Enemy has hit your ship at: " + mark);
+                        if (destroyed) stateLabel.setText("Enemy has destroyed your ship!");
                     }
                     i = 4; j = locations.size();
                     itHit = true;
@@ -402,12 +466,14 @@ public class Controller {
             ImageView hit = new ImageView(new Image(getClass().getResourceAsStream("images/hit.png")));
             hit.setFitHeight(26);
             hit.setFitWidth(26);
-            EnemyGrid.add(hit, column, rowNum);
+            if (yourTurn) EnemyGrid.add(hit, column, rowNum);
+            else OwnGrid.add(hit, column, rowNum);
         } else {
             ImageView miss = new ImageView(new Image(getClass().getResourceAsStream("images/miss.png")));
             miss.setFitHeight(26);
             miss.setFitWidth(26);
-            EnemyGrid.add(miss, column, rowNum);
+            if (yourTurn) EnemyGrid.add(miss, column, rowNum);
+            else OwnGrid.add(miss, column, rowNum);
         }
 
         return itHit;
@@ -464,7 +530,6 @@ public class Controller {
     public boolean FirstSet(String columnChar, int rowInt, int length, List <String> shipLocations) {
         boolean collision = false;
 
-
             if (columnChar.equals("G") || columnChar.equals("H") || columnChar.equals("I") || columnChar.equals("J")) {
                 switch (columnChar) {
                     case "G": if (length > 4) { collision = true; } break;
@@ -490,8 +555,6 @@ public class Controller {
                 }
             }
 
-
-        System.out.println(collision);
         return collision;
     }
 
