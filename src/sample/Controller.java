@@ -60,14 +60,15 @@ public class Controller {
 
     public List <String> ships = new ArrayList<>();
     public List <String> shipLocations = new ArrayList<>();
+    public List <String> ownShotLocations = new ArrayList<>();
     public List <String> enemyShips = new ArrayList<>();
     public List <String> enemyLocations = new ArrayList<>();
     public List <String> enemyShotLocations = new ArrayList<>();
+
     public String chosenShip = "";
     public String lastPlacedShip = "";
 
-    public int shipRow, shipColumn;
-    public int shipLength;
+    public int shipRow, shipColumn, shipLength;
     public int rotationRow, rotationColumn;
     public int turns = 0;
 
@@ -93,15 +94,27 @@ public class Controller {
 
     public void ShootAtEnemy(ActionEvent actionEvent) throws InterruptedException {
         String temp = actionEvent.toString();
-        String mark = temp.substring(42, temp.length() - 23);
-        stateLabel.setText("Shot at: " + mark);
+        String location = temp.substring(42, temp.length() - 23);
+        stateLabel.setText("Shot at: " + location);
 
-        turns++;
-        TurnCounter.setText("Turns: " + turns);
-        DidItHit(mark);
-        yourTurn = false;
+        boolean nonShot = true;
+        for (String enemyShotLocation : ownShotLocations) {
+            if (location.equals(enemyShotLocation)) {
+                nonShot = false;
+                break;
+            }
+        }
 
-        enemyShoot.fire();
+        if (nonShot) {
+            ownShotLocations.add(location);
+
+            turns++;
+            TurnCounter.setText("Turns: " + turns);
+            DidItHit(location);
+            yourTurn = false;
+
+            enemyShoot.fire();
+        }
     }
 
     public void EnemyShoots() throws InterruptedException {
@@ -217,12 +230,9 @@ public class Controller {
                 for (int i = 0; i < shipLength; i++) {
                     columnChar = IntToChar(shipColumn + i);
 
-                    Pane shipLocation = new Pane();
-                    shipLocation.setStyle("-fx-background-color: black;");
-                    grid.add(shipLocation, shipColumn + i, shipRow);
-
                     Button setButton = new Button();
-                    setButton.setStyle("-fx-background-color: black;");
+                    setButton.setStyle("-fx-background-color: white;");
+                    setButton.setVisible(false);
                     setButton.setOnAction(action);
                     setButton.setPrefWidth(26);
                     setButton.setId(columnChar + shipRow);
@@ -331,7 +341,7 @@ public class Controller {
             if (!collision) {
                 for (int i = 0; i < shipLength; i++) {
                     Pane emptyPane = new Pane();
-                    emptyPane.setStyle("-fx-background-color: f4f4f4; -fx-border-color: black;");
+                    emptyPane.setStyle("-fx-background-color: f4f4f4; -fx-border-color: grey;");
                     OwnGrid.add(emptyPane, shipColumn, shipRow + i);
                     shipLocations.remove(shipLocations.size() - 1);
                 }
@@ -367,7 +377,7 @@ public class Controller {
             if (!collision) {
                 for (int i = 0; i < shipLength; i++) {
                     Pane emptyPane = new Pane();
-                    emptyPane.setStyle("-fx-background-color: f4f4f4; -fx-border-color: black;");
+                    emptyPane.setStyle("-fx-background-color: f4f4f4; -fx-border-color: grey;");
                     OwnGrid.add(emptyPane, shipColumn + i, shipRow);
                     shipLocations.remove(shipLocations.size() - 1);
                 }
@@ -456,6 +466,7 @@ public class Controller {
                         stateLabel.setText("Enemy has hit your ship at: " + mark);
                         if (destroyed) stateLabel.setText("Enemy has destroyed your ship!");
                     }
+                    CheckIfWon();
                     i = 4; j = locations.size();
                     itHit = true;
                 }
@@ -477,6 +488,42 @@ public class Controller {
         }
 
         return itHit;
+    }
+
+    public void CheckIfWon() {
+
+        int destroyedOwnShips = 0, destroyedEnemyShips = 0;
+        for (int i = 0; i < 5; i++) {
+            boolean destroyed = false;
+            switch (i) {
+                case 0 -> destroyed = carrier.IsDestroyed();
+                case 1 -> destroyed = battleship.IsDestroyed();
+                case 2 -> destroyed = destroyer.IsDestroyed();
+                case 3 -> destroyed = submarine.IsDestroyed();
+                case 4 -> destroyed = patrol.IsDestroyed();
+            }
+            if (destroyed) destroyedOwnShips++;
+        }
+
+        for (int i = 0; i < 5; i++) {
+            boolean destroyed = false;
+            switch (i) {
+                case 0 -> destroyed = enemyCarrier.IsDestroyed();
+                case 1 -> destroyed = enemyBattleship.IsDestroyed();
+                case 2 -> destroyed = enemyDestroyer.IsDestroyed();
+                case 3 -> destroyed = enemySubmarine.IsDestroyed();
+                case 4 -> destroyed = enemyPatrol.IsDestroyed();
+            }
+            if (destroyed) destroyedEnemyShips++;
+        }
+
+        if (destroyedOwnShips == 5) {
+            stateLabel.setText("You lost! NPC destroyed all your ships!");
+            splitPane.setDisable(true);
+        } else if (destroyedEnemyShips == 5) {
+            stateLabel.setText("You won! You destroyed all NPC:s ships!");
+            splitPane.setDisable(true);
+        }
     }
 
     public boolean DoesItCollide(String columnChar, int rowInt, int length, boolean rotation, List <String> shipLocations) {
@@ -601,12 +648,26 @@ class Ship {
 
     public void SetShip (String givenName, int givenLength) { name = givenName; length = givenLength; }
 
-    public void SetShipLocation (List <String> givenLocation) {
-        location = givenLocation;
-        printInfo();
-    }
+    public void SetShipLocation (List <String> givenLocation) { location = givenLocation; }
+
+    public boolean IsDestroyed() { return destroyed; }
 
     public List<String> GetShipLocation () { return location; }
+
+    public boolean SetHits (String hitLocation) {
+        if (location.size() == 0) { destroyed = true;
+        } else {
+            for (int i = 0; i < location.size(); i++) {
+                if (hitLocation.equals(location.get(i))) {
+                    location.remove(i);
+                    hits.add(hitLocation);
+                }
+            }
+        }
+        if (location.size() == 0) destroyed = true;
+        printInfo();
+        return destroyed;
+    }
 
     public void printInfo() {
         System.out.println();
@@ -616,23 +677,5 @@ class Ship {
         System.out.println("Ship hits: " + hits);
         System.out.println("~-~-~ Debug ship information end ~-~-~");
         System.out.println();
-    }
-
-    public boolean SetHits (String hitLocation) {
-        if (location.size() == 0) {
-            destroyed = true;
-        } else {
-            if (location.size() == 1) destroyed = true;
-
-            for (int i = 0; i < location.size(); i++) {
-                if (hitLocation.equals(location.get(i))) {
-                    location.remove(i);
-                    hits.add(hitLocation);
-                }
-            }
-        }
-
-        printInfo();
-        return destroyed;
     }
 }
