@@ -1,1 +1,3 @@
 # Battleship
+
+JavaFx battleship game.
